@@ -25,10 +25,18 @@
     border: none;
     cursor: pointer;
   }
-  
+  .well{
+    margin-left: 165px;
+    width: 600px;
+  }
   /* Dropdown button on hover & focus */
   .dropbtn:hover, .dropbtn:focus {
     color: #5bc0de;
+  }
+  .content1{
+    
+      min-height: 300px;
+      border: 3px solid grey;
   }
   
   /* The container <div> - needed to position the dropdown content */
@@ -90,10 +98,7 @@
     text-decoration: none;
     
 }
-.well{
-    margin-left: 170px;
-    width: 50%;
-}
+
 .nav-bar{
     margin: 10px;
  
@@ -110,7 +115,14 @@
     width: 700px;
     margin-left: 30px;
 }
-
+.myArea{
+    width: 700px;
+    height: 30px;
+}
+.myArea1{
+    width: 700px;
+    height: 300px;
+}
 .nav-bar .active{
     text-align: center;
     
@@ -118,23 +130,22 @@
 }
 .nav-bar .active a{
     color: white;
+    padding: 10px 15px;
 }
 .nav-bar li a{
     color: black;
     text-decoration: none;
     position: relative;
-display: block;
-padding: 10px 15px;
+    display: block;
+    margin-block: 10px;
+
 }
 .nav-bar ul{
     padding: 10%;
     list-style-type: none;
     
 }
-.nav-bar li{
-    height: 40px;
-    width: 120px;
-}
+
 .everyone{
     height: 180px;
 }

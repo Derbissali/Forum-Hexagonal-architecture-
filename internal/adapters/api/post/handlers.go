@@ -35,7 +35,7 @@ func (h *handlerPost) Register(router *http.ServeMux) {
 	router.HandleFunc("/createdPosts", h.createdPosts)
 	router.HandleFunc("/addpost", h.addPost)
 	router.HandleFunc("/post/", h.postPage)
-	router.HandleFunc("/search/", h.search)
+	router.HandleFunc("/search", h.search)
 	router.HandleFunc("/likeNdis", h.LikeDis)
 	router.HandleFunc("/commenting", h.Comment)
 	router.HandleFunc("/commentLike", h.CommentLikeDis)

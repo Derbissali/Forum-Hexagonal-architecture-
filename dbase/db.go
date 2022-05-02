@@ -87,12 +87,13 @@ func (d *Database) createTable() {
 	}
 
 	_, err = d.db.Exec(`INSERT INTO category (name)
-		VALUES('golang'),
-			('python'),
-			('java'),
-			('c++'),
-			('git'),
-			('alem school');`)
+		VALUES('Dormitory'),
+			('University Questions'),
+			('Software Engineers'),
+			('Questions to teachers'),
+			('Entertainment'),
+			('Practice skills'),
+			('Hubby');`)
 	if err != nil {
 		// log.Printf("%v\n", err)
 	}
