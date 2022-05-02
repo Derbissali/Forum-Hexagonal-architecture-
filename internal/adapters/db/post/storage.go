@@ -20,7 +20,31 @@ func NewStorage(db *sql.DB) post.PostStorage {
 func (c *postStorage) GetAll() ([]model.Post, error) {
 	rows, err := c.db.Query(`SELECT post.id, user.name, post.name, post.body, post.Image
 	FROM post
-	INNER JOIN user ON user.id=post.user_id`)
+	INNER JOIN user ON user.id=post.user_id ORDER BY post.id DESC`)
+	var m model.Post
+	if err != nil {
+		log.Println(err)
+		return m.Rows, err
+	}
+
+	for rows.Next() {
+		var a model.Post
+		err = rows.Scan(&a.ID, &a.User.Name, &a.Name, &a.Body, &a.Image)
+		if err != nil {
+			log.Println(err)
+			return m.Rows, nil
+		}
+		a.Cat = CategoryByID(c, a.ID)
+		m.Rows = append(m.Rows, a)
+
+	}
+
+	return m.Rows, nil
+}
+func (c *postStorage) GetSearch(str string) ([]model.Post, error) {
+	fmt.Println(str)
+	rows, err := c.db.Query(`SELECT post.id, user.name, post.name, post.body, post.Image FROM post
+	 INNER JOIN user ON user.id=post.user_id  WHERE instr(post.name, ?) ORDER BY post.id DESC`, str)
 	var m model.Post
 	if err != nil {
 		log.Println(err)
@@ -89,7 +113,7 @@ func (c *postStorage) SortedCategory(t string) ([]model.Post, error) {
 	INNER JOIN category_post ON category.id = category_post.category_id
 	INNER JOIN post ON post.id = category_post.post_id
 	INNER JOIN user ON user.id=post.user_id
-	WHERE category.name = ?`), t)
+	WHERE category.name = ? ORDER BY post.id DESC`), t)
 	var m model.Post
 	if err != nil {
 		log.Println(err)
@@ -111,12 +135,13 @@ func (c *postStorage) SortedCategory(t string) ([]model.Post, error) {
 	return m.Rows, nil
 }
 func (c *postStorage) LikedPosts(t int) ([]model.Post, error) {
-	rows, err := c.db.Query(`SELECT DISTINCT post.id, post.name, post.body, user.name, post.Image
+
+	rows, err := c.db.Query(`SELECT DISTINCT post.id, user.name, post.name, post.body, post.Image
 	FROM category 
 	INNER JOIN likeNdis ON post.id = likeNdis.post_id
 	INNER JOIN post ON post.id = category_post.post_id
 	INNER JOIN category_post ON category.id = category_post.category_id
-	INNER JOIN user ON user.id = likeNdis.user_id WHERE likeNdis.like=1 AND user.id=?`, t)
+	INNER JOIN user ON user.id = likeNdis.user_id WHERE likeNdis.like=1 AND user.id=? ORDER BY post.id DESC`, t)
 	var m model.Post
 	if err != nil {
 		log.Println(err)
@@ -143,7 +168,7 @@ func (c *postStorage) CreatedPosts(t int) ([]model.Post, error) {
 	FROM category 
 	INNER JOIN post ON post.id = category_post.post_id
 	INNER JOIN category_post ON category.id = category_post.category_id
-	INNER JOIN user ON user.id = post.user_id WHERE user.id=?`, t)
+	INNER JOIN user ON user.id = post.user_id WHERE user.id=? ORDER BY post.id DESC`, t)
 	var m model.Post
 	if err != nil {
 		log.Println(err)

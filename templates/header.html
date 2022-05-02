@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="../assets/css/stylek.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/style.css" />
     <title>Document</title>
 </head>
 
@@ -15,6 +15,17 @@
     <header class="head">
         <div class="logo">
             <h1><a href="/">Forum</a></h1>
+        </div>
+        <div class="center-side">
+            <form action="/search">
+                <input type="text" list="search" autocomplete="off" placeholder="Search.." name="search">
+                <button type="submit"><i class="fa fa-search"></i></button>
+                <datalist id="search">
+                    {{ range $_, $e:= .Post.Rows }}
+                    <option value="{{ $e.Name}}">{{ $e.Name}}</option>
+                    {{ end }}
+                </datalist>
+            </form>
         </div>
         <div class="right-side">
             {{ if .User.Session }}

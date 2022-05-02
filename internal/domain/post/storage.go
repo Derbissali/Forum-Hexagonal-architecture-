@@ -4,6 +4,7 @@ import "tezt/hexagonal/internal/model"
 
 type PostStorage interface {
 	GetAll() ([]model.Post, error)
+	GetSearch(str string) ([]model.Post, error)
 	GetCategory() ([]model.Category, error)
 	SortedCategory(t string) ([]model.Post, error)
 	LikedPosts(t int) ([]model.Post, error)

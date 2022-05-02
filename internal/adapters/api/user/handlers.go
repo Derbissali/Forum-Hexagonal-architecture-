@@ -32,8 +32,7 @@ func (h *handlerUser) Signup(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/signup.html")
 
 	if err != nil {
-		log.Printf("Error signup html User Handler GetAll method:--> %v\n", err)
-
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	creds := &model.User{}
@@ -83,8 +82,7 @@ func (h *handlerUser) Signin(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/login.html")
 
 	if err != nil {
-		log.Printf("Error signup html User Handler GetAll method:--> %v\n", err)
-
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 

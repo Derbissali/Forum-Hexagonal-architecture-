@@ -10,6 +10,7 @@ type Handler interface {
 }
 type PostService interface {
 	GetAll() ([]model.Post, error)
+	GetSearch(str string) ([]model.Post, error)
 	GetCategory() ([]model.Category, error)
 	SortedByCategory(t string) ([]model.Post, error)
 	LikedPosts(t int) ([]model.Post, error)

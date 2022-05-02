@@ -7,7 +7,7 @@ import (
 )
 
 func (h *handlerPost) LikeDis(w http.ResponseWriter, r *http.Request) {
-	_, err := template.ParseFiles("templates/post_page.html")
+	_, err := template.ParseFiles("templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -37,7 +37,7 @@ func (h *handlerPost) LikeDis(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func (h *handlerPost) CommentLikeDis(w http.ResponseWriter, r *http.Request) {
-	_, err := template.ParseFiles("templates/post_page.html")
+	_, err := template.ParseFiles("templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

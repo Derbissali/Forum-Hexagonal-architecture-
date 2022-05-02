@@ -7,7 +7,7 @@ import (
 )
 
 func (h *handlerPost) Comment(w http.ResponseWriter, r *http.Request) {
-	_, err := template.ParseFiles("templates/post_page.html")
+	_, err := template.ParseFiles("templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

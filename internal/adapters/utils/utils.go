@@ -1,21 +1,18 @@
 package utils
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 func CheckEmail(s string) bool {
-	for _, i := range s {
-		if i == '@' {
-			for _, j := range s {
-				if j == '.' {
+	var rxEmail = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
-					return true
-				}
-			}
-
-		}
+	if len(s) > 254 || !rxEmail.MatchString(s) {
+		return false
 	}
+	return true
 
-	return false
 }
 func CheckEmpty(name, email, password string) bool {
 	name = strings.Trim(name, " ")

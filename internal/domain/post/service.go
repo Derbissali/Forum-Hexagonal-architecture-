@@ -30,6 +30,25 @@ func (s *service) GetAll() ([]model.Post, error) {
 
 	return p, nil
 }
+func (s *service) GetSearch(str string) ([]model.Post, error) {
+	var p []model.Post
+	var err error
+	if len(str) > 0 {
+		p, err = s.storage.GetSearch(str)
+		if err != nil {
+			log.Printf("ERROR post service GetAll method :--> %v\n", err)
+			return p, err
+		}
+	} else {
+		p, err = s.storage.GetAll()
+		if err != nil {
+			log.Printf("ERROR post service GetAll method :--> %v\n", err)
+			return p, err
+		}
+	}
+
+	return p, nil
+}
 func (s *service) PostPage(id int) ([]model.Post, error) {
 
 	posts, err := s.storage.CountPost()
@@ -94,11 +113,11 @@ func (s *service) CreatePost(m model.Post, cat []string, id int) model.Post {
 		return m
 	}
 
-	if len(cat) < 0 {
+	if len(cat) <= 0 {
 		m.CategoryNull = true
 		return m
 	}
-	fmt.Println(cat)
+
 	err := s.storage.CreatePost(m, cat, id)
 	if err != nil {
 		m.CategoryNull = true
