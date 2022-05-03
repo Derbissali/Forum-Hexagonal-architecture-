@@ -1,34 +1,16 @@
-package user
+package handler
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"text/template"
-	"tezt/hexagonal/internal/adapters/api"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
 
 	uuid "github.com/satori/go.uuid"
 )
 
-type handlerUser struct {
-	userService    api.UserService
-	sessionService api.SessionService
-}
-
-func NewHandler(service api.UserService, sessionService api.SessionService) api.Handler {
-	return &handlerUser{
-		userService:    service,
-		sessionService: sessionService,
-	}
-}
-func (h *handlerUser) Register(router *http.ServeMux) {
-	router.HandleFunc("/signup", h.Signup)
-	router.HandleFunc("/signin", h.Signin)
-
-}
-
-func (h *handlerUser) Signup(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/signup.html")
 
 	if err != nil {
@@ -45,7 +27,7 @@ func (h *handlerUser) Signup(w http.ResponseWriter, r *http.Request) {
 			Email:    r.FormValue("email"),
 			Password: r.FormValue("password"),
 		}
-		cred, err := h.userService.Create(creds)
+		cred, err := h.services.UserService.Create(creds)
 		if err != nil {
 			log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
 
@@ -77,7 +59,7 @@ func (h *handlerUser) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handlerUser) Signin(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Signin(w http.ResponseWriter, r *http.Request) {
 
 	temp, err := template.ParseFiles("./templates/login.html")
 
@@ -101,7 +83,7 @@ func (h *handlerUser) Signin(w http.ResponseWriter, r *http.Request) {
 			Email:    r.FormValue("email"),
 			Password: r.FormValue("password"),
 		}
-		cred, err := h.userService.Check(creds)
+		cred, err := h.services.UserService.Check(creds)
 		if err != nil {
 			log.Printf("ERROR user handler UserCreate method GetById function:--> %v\n", err)
 
@@ -121,7 +103,7 @@ func (h *handlerUser) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func (h *handlerUser) CreateSession(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) CreateSession(w http.ResponseWriter, r *http.Request) {
 
 	email := r.FormValue("email")
 
@@ -134,18 +116,18 @@ func (h *handlerUser) CreateSession(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	}
 	http.SetCookie(w, c)
-	id, err := h.userService.GetIDbyName(email)
+	id, err := h.services.UserService.GetIDbyName(email)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(c.Value)
-	err = h.sessionService.Create(c.Value, id)
+	err = h.services.SessionService.Create(c.Value, id)
 
 	if err != nil {
-		h.sessionService.Delete(id)
-		h.sessionService.Create(c.Value, id)
+		h.services.SessionService.Delete(id)
+		h.services.SessionService.Create(c.Value, id)
 		return
 	}
 

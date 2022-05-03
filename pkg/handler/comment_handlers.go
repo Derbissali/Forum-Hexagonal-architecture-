@@ -1,12 +1,12 @@
-package post
+package handler
 
 import (
 	"html/template"
 	"net/http"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
 )
 
-func (h *handlerPost) Comment(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Comment(w http.ResponseWriter, r *http.Request) {
 	_, err := template.ParseFiles("templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -25,7 +25,7 @@ func (h *handlerPost) Comment(w http.ResponseWriter, r *http.Request) {
 
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 	} else {
 		http.Redirect(w, r, "/signin", 301)
 		return
@@ -34,7 +34,7 @@ func (h *handlerPost) Comment(w http.ResponseWriter, r *http.Request) {
 	n := M.User.ID
 
 	comment := r.FormValue("comment")
-	err = h.commentService.AddComment(comment, id, n)
+	err = h.services.CommentService.AddComment(comment, id, n)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return

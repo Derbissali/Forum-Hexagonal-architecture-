@@ -1,24 +1,24 @@
-package user
+package service
 
 import (
 	"log"
-	"tezt/hexagonal/internal/adapters/api"
-	"tezt/hexagonal/internal/adapters/utils"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
+	"tidy/pkg/repository"
+	"tidy/pkg/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-type service struct {
-	storage UserStorage
+type UserServ struct {
+	storage repository.UserStorage
 }
 
 // NewService ...
-func NewService(storage UserStorage) api.UserService {
-	return &service{storage: storage}
+func NewUserService(storage repository.UserStorage) *UserServ {
+	return &UserServ{storage: storage}
 }
 
-func (c *service) Create(m *model.User) (model.User, error) {
+func (c *UserServ) Create(m *model.User) (model.User, error) {
 	empty := utils.CheckEmpty(m.Name, m.Email, m.Password)
 	if !empty {
 		m.ErrorEmpty = true
@@ -43,7 +43,7 @@ func (c *service) Create(m *model.User) (model.User, error) {
 	return user, nil
 }
 
-func (c *service) Check(m *model.User) (model.User, error) {
+func (c *UserServ) Check(m *model.User) (model.User, error) {
 
 	if !c.storage.Check(m.Email, m.Password) {
 		m.ErrorEm = true
@@ -51,7 +51,7 @@ func (c *service) Check(m *model.User) (model.User, error) {
 	}
 	return *m, nil
 }
-func (c *service) GetIDbyName(m string) (string, error) {
+func (c *UserServ) GetIDbyName(m string) (string, error) {
 	id, err := c.storage.SelectUserID(m)
 	if err != nil {
 		return "", err

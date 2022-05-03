@@ -1,23 +1,22 @@
-package post
+package repository
 
 import (
 	"database/sql"
 	"fmt"
 	"log"
-	"tezt/hexagonal/internal/domain/post"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
 )
 
-type postStorage struct {
+type SqlPostStorage struct {
 	db *sql.DB
 }
 
-func NewStorage(db *sql.DB) post.PostStorage {
-	return &postStorage{
+func NewPostStorage(db *sql.DB) *SqlPostStorage {
+	return &SqlPostStorage{
 		db: db,
 	}
 }
-func (c *postStorage) GetAll() ([]model.Post, error) {
+func (c *SqlPostStorage) GetAll() ([]model.Post, error) {
 	rows, err := c.db.Query(`SELECT post.id, user.name, post.name, post.body, post.Image
 	FROM post
 	INNER JOIN user ON user.id=post.user_id ORDER BY post.id DESC`)
@@ -41,7 +40,7 @@ func (c *postStorage) GetAll() ([]model.Post, error) {
 
 	return m.Rows, nil
 }
-func (c *postStorage) GetSearch(str string) ([]model.Post, error) {
+func (c *SqlPostStorage) GetSearch(str string) ([]model.Post, error) {
 	fmt.Println(str)
 	rows, err := c.db.Query(`SELECT post.id, user.name, post.name, post.body, post.Image FROM post
 	 INNER JOIN user ON user.id=post.user_id  WHERE instr(post.name, ?) ORDER BY post.id DESC`, str)
@@ -65,7 +64,7 @@ func (c *postStorage) GetSearch(str string) ([]model.Post, error) {
 
 	return m.Rows, nil
 }
-func CategoryByID(c *postStorage, postid int) []model.Category {
+func CategoryByID(c *SqlPostStorage, postid int) []model.Category {
 	row, e := c.db.Query(`SELECT category.name  
 	FROM category_post
 	INNER JOIN category ON category.id = category_post.category_id
@@ -90,7 +89,7 @@ func CategoryByID(c *postStorage, postid int) []model.Category {
 	return m.Cat
 }
 
-func (c *postStorage) GetCategory() ([]model.Category, error) {
+func (c *SqlPostStorage) GetCategory() ([]model.Category, error) {
 	rows, e := c.db.Query(`SELECT "name" FROM "category" ORDER BY "name"`)
 	if e != nil {
 		return nil, e
@@ -107,7 +106,7 @@ func (c *postStorage) GetCategory() ([]model.Category, error) {
 	}
 	return m.Rows, nil
 }
-func (c *postStorage) SortedCategory(t string) ([]model.Post, error) {
+func (c *SqlPostStorage) SortedCategory(t string) ([]model.Post, error) {
 	rows, err := c.db.Query((`SELECT post.id, user.name, post.name, post.body, post.Image
 	FROM category 
 	INNER JOIN category_post ON category.id = category_post.category_id
@@ -134,7 +133,7 @@ func (c *postStorage) SortedCategory(t string) ([]model.Post, error) {
 
 	return m.Rows, nil
 }
-func (c *postStorage) LikedPosts(t int) ([]model.Post, error) {
+func (c *SqlPostStorage) LikedPosts(t int) ([]model.Post, error) {
 
 	rows, err := c.db.Query(`SELECT DISTINCT post.id, user.name, post.name, post.body, post.Image
 	FROM category 
@@ -162,7 +161,7 @@ func (c *postStorage) LikedPosts(t int) ([]model.Post, error) {
 
 	return m.Rows, nil
 }
-func (c *postStorage) CreatedPosts(t int) ([]model.Post, error) {
+func (c *SqlPostStorage) CreatedPosts(t int) ([]model.Post, error) {
 	fmt.Println(t, "asd")
 	rows, err := c.db.Query(`SELECT DISTINCT post.id, user.name, post.name, post.body, post.Image
 	FROM category 
@@ -189,7 +188,7 @@ func (c *postStorage) CreatedPosts(t int) ([]model.Post, error) {
 
 	return m.Rows, nil
 }
-func (c *postStorage) CreatePost(m model.Post, s []string, ID int) error {
+func (c *SqlPostStorage) CreatePost(m model.Post, s []string, ID int) error {
 	b := 0
 	stmt := c.db.QueryRow(`INSERT INTO post (name, body, user_id, image, likes, dislikes) VALUES (?, ?, ?, ?, ?, ?) RETURNING id`, m.Name, m.Body, ID, m.Image, 0, 0)
 	fmt.Println(s)
@@ -212,7 +211,7 @@ func (c *postStorage) CreatePost(m model.Post, s []string, ID int) error {
 	return nil
 }
 
-func (c *postStorage) CountPost() (int, error) {
+func (c *SqlPostStorage) CountPost() (int, error) {
 	a := 0
 	row := c.db.QueryRow(`SELECT COUNT(DISTINCT name) FROM post`)
 	err := row.Scan(&a)
@@ -222,7 +221,7 @@ func (c *postStorage) CountPost() (int, error) {
 	return a, nil
 }
 
-func (c *postStorage) SinglePost(id int) ([]model.Post, error) {
+func (c *SqlPostStorage) SinglePost(id int) ([]model.Post, error) {
 	row := c.db.QueryRow((`SELECT post.id, post.name, post.body, post.likes, post.dislikes, user.Name, post.Image
 	FROM category 
 	INNER JOIN category_post ON category.id = category_post.category_id
@@ -246,7 +245,7 @@ func (c *postStorage) SinglePost(id int) ([]model.Post, error) {
 
 	return m.Rows, nil
 }
-func (s *postStorage) GetAllComment(id int) ([]model.Comment, error) {
+func (s *SqlPostStorage) GetAllComment(id int) ([]model.Comment, error) {
 	rows, err := s.db.Query((`SELECT comment.id, body, post_id, user.name, comment.likes, comment.dislikes
 	FROM comment 
 	INNER JOIN user ON user.id = comment.user_id

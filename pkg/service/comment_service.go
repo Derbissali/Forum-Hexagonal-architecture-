@@ -1,22 +1,22 @@
-package comment
+package service
 
 import (
 	"fmt"
 	"strconv"
-	"tezt/hexagonal/internal/adapters/api"
+	"tidy/pkg/repository"
 )
 
-type service struct {
-	storage CommentStorage
+type CommentServ struct {
+	storage repository.CommentStorage
 }
 
-func NewService(storage CommentStorage) api.CommentService {
-	return &service{
+func NewCommentService(storage repository.CommentStorage) *CommentServ {
+	return &CommentServ{
 		storage: storage,
 	}
 }
 
-func (s *service) AddComment(comment string, id string, n int) error {
+func (s *CommentServ) AddComment(comment string, id string, n int) error {
 	var err error
 	i, err := strconv.Atoi(id)
 	if err != nil {

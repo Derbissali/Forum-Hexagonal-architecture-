@@ -1,4 +1,4 @@
-package post
+package handler
 
 import (
 	"fmt"
@@ -10,39 +10,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"tezt/hexagonal/internal/adapters/api"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
+
 	"time"
 )
 
-type handlerPost struct {
-	postService    api.PostService
-	sessionService api.SessionService
-	commentService api.CommentService
-}
-
-func NewHandler(service api.PostService, sessionService api.SessionService, commentService api.CommentService) api.Handler {
-	return &handlerPost{
-		postService:    service,
-		sessionService: sessionService,
-		commentService: commentService,
-	}
-}
-func (h *handlerPost) Register(router *http.ServeMux) {
-	router.HandleFunc("/", h.home_page)
-	router.HandleFunc("/Category/", h.postsByCategory)
-	router.HandleFunc("/likedPosts", h.likedPosts)
-	router.HandleFunc("/createdPosts", h.createdPosts)
-	router.HandleFunc("/addpost", h.addPost)
-	router.HandleFunc("/post/", h.postPage)
-	router.HandleFunc("/search", h.search)
-	router.HandleFunc("/likeNdis", h.LikeDis)
-	router.HandleFunc("/commenting", h.Comment)
-	router.HandleFunc("/commentLike", h.CommentLikeDis)
-	router.HandleFunc("/logout", h.logout)
-
-}
-func (h *handlerPost) search(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) search(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/home_page.html", "./templates/header.html")
 
 	if err != nil {
@@ -51,13 +24,13 @@ func (h *handlerPost) search(w http.ResponseWriter, r *http.Request) {
 	}
 	var M model.Forum
 	selcection := r.FormValue("search")
-	M.Post.Rows, err = h.postService.GetSearch(selcection)
+	M.Post.Rows, err = h.services.PostService.GetSearch(selcection)
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetAll function:--> %v\n", err)
 
 		return
 	}
-	M.Category, err = h.postService.GetCategory()
+	M.Category, err = h.services.PostService.GetCategory()
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetCategory function:--> %v\n", err)
 
@@ -65,7 +38,7 @@ func (h *handlerPost) search(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 
 		temp.Execute(w, M)
 	} else {
@@ -73,7 +46,7 @@ func (h *handlerPost) search(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handlerPost) home_page(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) home_page(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -85,13 +58,13 @@ func (h *handlerPost) home_page(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var M model.Forum
-	M.Post.Rows, err = h.postService.GetAll()
+	M.Post.Rows, err = h.services.PostService.GetAll()
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetAll function:--> %v\n", err)
 
 		return
 	}
-	M.Category, err = h.postService.GetCategory()
+	M.Category, err = h.services.PostService.GetCategory()
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetCategory function:--> %v\n", err)
 
@@ -99,7 +72,7 @@ func (h *handlerPost) home_page(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 
 		temp.Execute(w, M)
 	} else {
@@ -108,7 +81,7 @@ func (h *handlerPost) home_page(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *handlerPost) postPage(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) postPage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("./templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -124,7 +97,7 @@ func (h *handlerPost) postPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var M model.Forum
-	M.Category, err = h.postService.GetCategory()
+	M.Category, err = h.services.PostService.GetCategory()
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
 
@@ -139,21 +112,21 @@ func (h *handlerPost) postPage(w http.ResponseWriter, r *http.Request) {
 	}
 	// CommentId
 
-	M.Post.Rows, err = h.postService.PostPage(i)
+	M.Post.Rows, err = h.services.PostService.PostPage(i)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 		tmpl.Execute(w, M)
 	} else {
 		tmpl.Execute(w, M)
 	}
 
 }
-func (h *handlerPost) postsByCategory(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) postsByCategory(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/home_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -168,31 +141,31 @@ func (h *handlerPost) postsByCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var M model.Forum
-	M.Category, err = h.postService.GetCategory()
+	M.Category, err = h.services.PostService.GetCategory()
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
 
 		return
 	}
 	title := r.RequestURI[10:]
-	M.Post.Rows, err = h.postService.SortedByCategory(title)
+	M.Post.Rows, err = h.services.PostService.SortedByCategory(title)
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 		temp.Execute(w, M)
 	} else {
 		temp.Execute(w, M)
 	}
 
 }
-func (h *handlerPost) addPost(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) addPost(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/addpost.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	var M model.Forum
-	M.Category, err = h.postService.GetCategory()
+	M.Category, err = h.services.PostService.GetCategory()
 	if err != nil {
 		log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
 
@@ -200,7 +173,7 @@ func (h *handlerPost) addPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 	} else {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -251,7 +224,7 @@ func (h *handlerPost) addPost(w http.ResponseWriter, r *http.Request) {
 			Image: fileName,
 		}
 
-		M.Post = h.postService.CreatePost(argument, Caty, n)
+		M.Post = h.services.PostService.CreatePost(argument, Caty, n)
 		if M.Post.TitBodOver {
 			temp.Execute(w, M)
 			return
@@ -269,7 +242,7 @@ func (h *handlerPost) addPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func (h *handlerPost) likedPosts(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) likedPosts(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/home_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -284,14 +257,14 @@ func (h *handlerPost) likedPosts(w http.ResponseWriter, r *http.Request) {
 	if h.CheckSession(w, r) {
 		var M model.Forum
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
-		M.Category, err = h.postService.GetCategory()
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
+		M.Category, err = h.services.PostService.GetCategory()
 		if err != nil {
 			log.Printf("ERROR post handler likedPost method GetCategoryfunction:--> %v\n", err)
 
 			return
 		}
-		M.Post.Rows, err = h.postService.LikedPosts(M.User.ID)
+		M.Post.Rows, err = h.services.PostService.LikedPosts(M.User.ID)
 		if err != nil {
 			log.Printf("ERROR post handler PostCreate method ReadByUUID function:--> %v\n", err)
 
@@ -304,7 +277,7 @@ func (h *handlerPost) likedPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-func (h *handlerPost) createdPosts(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) createdPosts(w http.ResponseWriter, r *http.Request) {
 	temp, err := template.ParseFiles("./templates/home_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -319,15 +292,15 @@ func (h *handlerPost) createdPosts(w http.ResponseWriter, r *http.Request) {
 	if h.CheckSession(w, r) {
 		var M model.Forum
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 
-		M.Category, err = h.postService.GetCategory()
+		M.Category, err = h.services.PostService.GetCategory()
 		if err != nil {
 			log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
 
 			return
 		}
-		M.Post.Rows, err = h.postService.CreatedPosts(M.User.ID)
+		M.Post.Rows, err = h.services.PostService.CreatedPosts(M.User.ID)
 		if err != nil {
 			log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
 
@@ -341,7 +314,7 @@ func (h *handlerPost) createdPosts(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *handlerPost) logout(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) logout(w http.ResponseWriter, r *http.Request) {
 	_, err := template.ParseFiles("./templates/home_page.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -358,13 +331,13 @@ func (h *handlerPost) logout(w http.ResponseWriter, r *http.Request) {
 	c.MaxAge = -1
 	c.HttpOnly = true
 
-	m, err := h.sessionService.ReadByUUID(c.Value)
+	m, err := h.services.SessionService.ReadByUUID(c.Value)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	err = h.sessionService.Delete(strconv.Itoa(m.ID))
+	err = h.services.SessionService.Delete(strconv.Itoa(m.ID))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -373,10 +346,19 @@ func (h *handlerPost) logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), 303)
 	return
 }
-func (h *handlerPost) CheckSession(w http.ResponseWriter, r *http.Request) bool {
-	_, err := r.Cookie("session")
+func (h *Handlers) CheckSession(w http.ResponseWriter, r *http.Request) bool {
+	c, err := r.Cookie("session")
 	if err != nil {
-		fmt.Println(err)
+		return false
+	}
+	var M model.User
+	M, _ = h.services.SessionService.ReadByUUID(c.Value)
+	if !M.Session {
+		fmt.Println("kirdi")
+		c.Name = "session"
+		c.MaxAge = -1
+		c.HttpOnly = true
+		http.SetCookie(w, c)
 		return false
 	}
 	return true

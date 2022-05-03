@@ -1,25 +1,24 @@
-package user
+package repository
 
 import (
 	"database/sql"
 	"fmt"
-	"tezt/hexagonal/internal/domain/user"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-type userStorage struct {
+type SqlUserStorage struct {
 	db *sql.DB
 }
 
-func NewStorage(db *sql.DB) user.UserStorage {
-	return &userStorage{
+func NewUserStorage(db *sql.DB) *SqlUserStorage {
+	return &SqlUserStorage{
 		db: db,
 	}
 }
 
-func (c *userStorage) Create(m *model.User) (model.User, error) {
+func (c *SqlUserStorage) Create(m *model.User) (model.User, error) {
 	checkUniq := checkUniq(c, m.Name, m.Email)
 	if !checkUniq {
 		m.ErrorEm = true
@@ -33,7 +32,7 @@ func (c *userStorage) Create(m *model.User) (model.User, error) {
 	return *m, nil
 }
 
-func checkUniq(c *userStorage, name, Email string) bool {
+func checkUniq(c *SqlUserStorage, name, Email string) bool {
 	notUn := 0
 	notUniq := c.db.QueryRow((`SELECT user.id FROM user WHERE user.email=?`), Email)
 	notUniq.Scan(&notUn)
@@ -45,7 +44,7 @@ func checkUniq(c *userStorage, name, Email string) bool {
 	return true
 }
 
-func (c *userStorage) Check(n, p string) bool {
+func (c *SqlUserStorage) Check(n, p string) bool {
 	result := c.db.QueryRow(`SELECT "password" from "user" WHERE email=$1`, n)
 	fmt.Println(n, p)
 	ourPerson := model.User{}
@@ -65,7 +64,7 @@ func (c *userStorage) Check(n, p string) bool {
 	return true
 }
 
-func (c *userStorage) SelectUserID(name string) (string, error) {
+func (c *SqlUserStorage) SelectUserID(name string) (string, error) {
 	a := ""
 	row := c.db.QueryRow((`SELECT user.id FROM user WHERE user.email = ?`), name)
 	e := row.Scan(&a)

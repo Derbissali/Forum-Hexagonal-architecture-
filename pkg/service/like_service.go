@@ -1,20 +1,21 @@
-package like
+package service
 
-type service struct {
-	storage LikeStorage
-}
-type LikeService interface {
-	SetLikeDislike(l, d, idPost string, n int) error
-	SetLikeDislikeComment(l, d, idPost, idComment string, n int) error
+import (
+	"log"
+	"tidy/pkg/repository"
+)
+
+type LikeServ struct {
+	storage repository.LikeStorage
 }
 
-func NewService(storage LikeStorage) LikeService {
-	return &service{
+func NewLikeService(storage repository.LikeStorage) *LikeServ {
+	return &LikeServ{
 		storage: storage,
 	}
 }
 
-func (s *service) SetLikeDislike(l, d, idPost string, n int) error {
+func (s *LikeServ) SetLikeDislike(l, d, idPost string, n int) error {
 	if l != "" {
 		a := s.storage.PostDislike(n, idPost)
 		liked := s.storage.PostLike(n, idPost)
@@ -45,7 +46,7 @@ func (s *service) SetLikeDislike(l, d, idPost string, n int) error {
 	s.storage.UpdateDislikeCount(idPost)
 	return nil
 }
-func (s *service) SetLikeDislikeComment(l, d, idPost, idComment string, n int) error {
+func (s *LikeServ) SetLikeDislikeComment(l, d, idPost, idComment string, n int) error {
 	if l != "" {
 		a := s.storage.CommentDislike(n, idPost, idComment)
 		liked := s.storage.CommentLike(n, idPost, idComment)
@@ -74,5 +75,19 @@ func (s *service) SetLikeDislikeComment(l, d, idPost, idComment string, n int) e
 	}
 	s.storage.UpdateCommentLikeCount(idPost, idComment)
 	s.storage.UpdateCommentDislikeCount(idPost, idComment)
+	return nil
+}
+func (s *LikeServ) PostLike(l, d, idPost string, n int) error {
+	if err := s.SetLikeDislike(l, d, idPost, n); err != nil {
+		log.Printf("ERROR post  PostServ Check Post Like method:----> %v\n", err)
+		return err
+	}
+	return nil
+}
+func (s *LikeServ) CommentLike(l, d, idPost, idComment string, n int) error {
+	if err := s.SetLikeDislikeComment(l, d, idPost, idComment, n); err != nil {
+		log.Printf("ERROR post PostServ Check Post Like method:----> %v\n", err)
+		return err
+	}
 	return nil
 }

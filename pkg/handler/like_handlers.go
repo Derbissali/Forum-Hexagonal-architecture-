@@ -1,12 +1,12 @@
-package post
+package handler
 
 import (
 	"html/template"
 	"net/http"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
 )
 
-func (h *handlerPost) LikeDis(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) LikeDis(w http.ResponseWriter, r *http.Request) {
 	_, err := template.ParseFiles("templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -22,7 +22,7 @@ func (h *handlerPost) LikeDis(w http.ResponseWriter, r *http.Request) {
 
 	if h.CheckSession(w, r) {
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
 	} else {
 		http.Redirect(w, r, "/signin", 301)
 		return
@@ -31,12 +31,12 @@ func (h *handlerPost) LikeDis(w http.ResponseWriter, r *http.Request) {
 	l := r.FormValue("like")
 	d := r.FormValue("dislike")
 
-	h.postService.PostLike(l, d, idPost, n)
+	h.services.LikeService.PostLike(l, d, idPost, n)
 
 	http.Redirect(w, r, r.Header.Get("Referer"), 301)
 	return
 }
-func (h *handlerPost) CommentLikeDis(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) CommentLikeDis(w http.ResponseWriter, r *http.Request) {
 	_, err := template.ParseFiles("templates/post_page.html", "./templates/header.html")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -48,23 +48,23 @@ func (h *handlerPost) CommentLikeDis(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	idPost := r.FormValue("postId")
-
-	idComment := r.FormValue("comId")
 
 	if h.CheckSession(w, r) {
+		idPost := r.FormValue("postId")
+
+		idComment := r.FormValue("comId")
 		c, _ := r.Cookie("session")
-		M.User, err = h.sessionService.ReadByUUID(c.Value)
+		M.User, err = h.services.SessionService.ReadByUUID(c.Value)
+		n := M.User.ID
+		l := r.FormValue("commnetLike")
+		d := r.FormValue("commentDislike")
+
+		h.services.LikeService.CommentLike(l, d, idPost, idComment, n)
+
+		http.Redirect(w, r, r.Header.Get("Referer"), 301)
 	} else {
 		http.Redirect(w, r, "/signin", 301)
 		return
 	}
-	n := M.User.ID
-	l := r.FormValue("commnetLike")
-	d := r.FormValue("commentDislike")
 
-	h.postService.CommentLike(l, d, idPost, idComment, n)
-
-	http.Redirect(w, r, r.Header.Get("Referer"), 301)
-	return
 }

@@ -1,23 +1,22 @@
-package session
+package repository
 
 import (
 	"database/sql"
 	"fmt"
-	"tezt/hexagonal/internal/domain/session"
-	"tezt/hexagonal/internal/model"
+	"tidy/pkg/model"
 )
 
-type sessionStorage struct {
+type SqlSessionStorage struct {
 	db *sql.DB
 }
 
-func NewStorage(db *sql.DB) session.SessionStorage {
-	return &sessionStorage{
+func NewSessionStorage(db *sql.DB) *SqlSessionStorage {
+	return &SqlSessionStorage{
 		db: db,
 	}
 }
 
-func (h *sessionStorage) Create(uuid, id string) error {
+func (h *SqlSessionStorage) Create(uuid, id string) error {
 	fmt.Println("asd", uuid, id)
 	_, err := h.db.Exec(`INSERT INTO session (uuid, user_id) VALUES (?, ?)`, uuid, id)
 	if err != nil {
@@ -27,10 +26,10 @@ func (h *sessionStorage) Create(uuid, id string) error {
 	return nil
 }
 
-func (h *sessionStorage) Check() error {
+func (h *SqlSessionStorage) Check() error {
 	return nil
 }
-func (h *sessionStorage) Delete(n string) error {
+func (h *SqlSessionStorage) Delete(n string) error {
 	_, err := h.db.Exec(`DELETE FROM session where user_id = ?`, n)
 	if err != nil {
 		fmt.Println(err)
@@ -39,7 +38,7 @@ func (h *sessionStorage) Delete(n string) error {
 	return nil
 }
 
-func (h *sessionStorage) ReadByUUID(uuid string) (model.User, error) {
+func (h *SqlSessionStorage) ReadByUUID(uuid string) (model.User, error) {
 	row, err := h.db.Query(`SELECT user.id, user.name
 	FROM user
 	INNER JOIN session ON session.user_id=user.id
