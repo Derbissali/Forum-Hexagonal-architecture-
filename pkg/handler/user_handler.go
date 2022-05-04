@@ -30,7 +30,6 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		cred, err := h.services.UserService.Create(creds)
 		if err != nil {
 			log.Printf("ERROR post handler PostCreate method GetById function:--> %v\n", err)
-
 			return
 		}
 		if cred.ErrorEmpty {
@@ -55,6 +54,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+
 		return
 	}
 }
